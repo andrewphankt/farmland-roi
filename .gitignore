@@ -1,0 +1,10 @@
+data/
+*.shp
+*.shx
+*.dbf
+*.prj
+*.geojson
+.streamlit/
+__pycache__/
+.venv/
+.DS_Store
