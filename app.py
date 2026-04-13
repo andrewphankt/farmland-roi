@@ -76,16 +76,19 @@ layer = pdk.Layer(
     pickable=True,
     auto_highlight=True,
 
-    binary=False, 
+    binary=False,
+
     load_options={
         "mvt": {
-            "worker": False 
+            "layers": ["all_counties_diamonds"]
         }
     },
+
     get_fill_color=f"[{r_js}, {g_js}, {b_js}, {alpha_js}]",
     get_line_color=[255, 255, 255, 30], 
     line_width_min_pixels=1,
 )
+
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=st.session_state.view_state,
