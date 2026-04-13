@@ -71,7 +71,7 @@ alpha_js = f"({logic_chain}) ? 100 : 0"
 # Note: Using relative static path for Streamlit native serving
 layer = pdk.Layer(
     "MVTLayer",
-    data="static/tiles/{z}/{x}/{y}.pbf",
+    data="https://cdn.jsdelivr.net/gh/andrewphankt/farmland-roi@main/static/tiles/{z}/{x}/{y}.pbf",
     id=layer_id,
     pickable=True,
     auto_highlight=True,
