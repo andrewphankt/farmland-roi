@@ -71,22 +71,18 @@ alpha_js = f"({logic_chain}) ? 100 : 0"
     
 layer = pdk.Layer(
     "MVTLayer",
- 
-    data="https://cdn.jsdelivr.net/gh/andrewphankt/farmland-roi@main/static/tiles/{z}/{x}/{y}.pbf",
-    id=layer_id,
+    data="https://raw.githubusercontent.com/andrewphankt/farmland-roi/main/static/tiles/{z}/{x}/{y}.pbf",
+    id=layer_id + "_v2", 
     pickable=True,
-    auto_highlight=True,
-  
     binary=False, 
-
     load_options={
         "mvt": {
-            "layers": ["all_counties_diamonds"],
-            "coordinates": "wgs84"
-        }
+            "layers": ["all_counties_diamonds"]
+        },
+        
+        "workerUrl": "https://unpkg.com/@deck.gl/layers@8.9.0/dist/mvt-worker.js"
     },
-    
-    get_fill_color=f"[{r_js}, {g_js}, {b_js}, {alpha_js}]",
+    get_fill_color=[255, 0, 0, 150],
     get_line_color=[255, 255, 255, 30], 
     line_width_min_pixels=1,
 )
