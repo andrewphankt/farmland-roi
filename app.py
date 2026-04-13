@@ -72,20 +72,22 @@ fill_color_logic = f"""
 layer = pdk.Layer(
     "MVTLayer",
     data="static/tiles/{z}/{x}/{y}.pbf",
-    id="agri-parcel-layer-v11",
+    id="agri-parcel-layer-v12", # Changed ID to force fresh reload
     pickable=True,
     auto_highlight=True,
+    # This external loader is the secret sauce for Type 4 errors
+    loaders=["https://unpkg.com/@loaders.gl/mvt@3.4.4/dist/mvt-loader.umd.js"],
     binary=False,
     load_options={
         "mvt": {
-            "layers": ["all_counties_diamonds"]
+            "layers": ["all_counties_diamonds"],
+            "binary": False
         }
     },
     get_fill_color=fill_color_logic,
     get_line_color=[255, 255, 255, 40],
     line_width_min_pixels=0.5,
 )
-
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=st.session_state.view_state,
