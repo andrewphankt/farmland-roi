@@ -52,7 +52,7 @@ if search_apn:
     t = df_all[df_all['APN'] == search_apn].iloc[0]
     st.session_state.view_state = pdk.ViewState(latitude=t['lat'], longitude=t['lon'], zoom=15)
 
-layer_id = f"ag_layer_{show_prime}_{show_marginal}_{only_irrigated}"
+layer_id = "test_layer_v100"
 
 r_js = "properties.C_ID == 1 ? 34 : (properties.C_ID == 2 ? 245 : 239)"
 g_js = "properties.C_ID == 1 ? 197 : (properties.C_ID == 2 ? 158 : 68)"
@@ -94,7 +94,7 @@ layer = pdk.Layer(
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=st.session_state.view_state,
-    map_style="mapbox://styles/mapbox/satellite-v9",
+    map_style=None,
     api_keys={"mapbox": st.secrets["MAPBOX_API_KEY"]},
     tooltip={
         "html": """
