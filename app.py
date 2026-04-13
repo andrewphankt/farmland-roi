@@ -7,79 +7,48 @@ st.set_page_config(layout="wide", page_title="AgriParcel Index")
 
 @st.cache_data(persist="disk")
 def load_index():
-    # Load search index with explicit types
     return pd.read_csv("search_index.csv", dtype={'APN': str, 'C_ID': int, 'S_Bin': int, 'W_Dist': int, 'County': str})
 
 try:
     df_all = load_index()
 except Exception:
-    st.error("Search index (search_index.csv) not found.")
+    st.error("Search index not found.")
     st.stop()
 
-# Initialize View State
 if "view_state" not in st.session_state:
     st.session_state.view_state = pdk.ViewState(
-        latitude=36.77, 
-        longitude=-119.74, 
-        zoom=10, 
-        pitch=0, 
-        bearing=0
+        latitude=36.77, longitude=-119.74, zoom=10
     )
 
-# --- SIDEBAR CONTROLS ---
 st.sidebar.title("AgriParcel Index")
-
 show_prime = st.sidebar.checkbox("Show Prime Soil", value=True)
 show_marginal = st.sidebar.checkbox("Show Marginal Soil", value=True)
-only_irrigated = st.sidebar.toggle("Only Irrigated (Water District)", value=False)
+only_irrigated = st.sidebar.toggle("Only Irrigated", value=False)
 
-st.sidebar.write("---")
+# Logic for colors - Using Strings to avoid the "Comma" parser error
+# We use RGBA strings instead of lists []
+p_color = "rgba(34,197,94,0.7)" if show_prime else "rgba(0,0,0,0)"
+m_color = "rgba(234,179,8,0.7)" if show_marginal else "rgba(0,0,0,0)"
 
-# Address Search
-address_input = st.sidebar.text_input("Search by Address", placeholder="e.g. Fresno, CA")
-if st.sidebar.button("Fly to Address") and address_input:
-    try:
-        geolocator = Nominatim(user_agent="agri_parcel_index")
-        location = geolocator.geocode(address_input)
-        if location:
-            st.session_state.view_state = pdk.ViewState(
-                latitude=location.latitude, 
-                longitude=location.longitude, 
-                zoom=14
-            )
-            st.rerun()
-    except:
-        st.sidebar.error("Address not found.")
+# If only irrigated is on, we override the non-irrigated ones to invisible
+p2_color = "rgba(0,0,0,0)" if only_irrigated else p_color
+m_color_final = "rgba(0,0,0,0)" if only_irrigated else m_color
 
-# APN Jump
-search_apn = st.sidebar.selectbox("Jump to APN", options=[""] + sorted(df_all['APN'].unique().tolist()))
-if search_apn:
-    t = df_all[df_all['APN'] == search_apn].iloc[0]
-    st.session_state.view_state = pdk.ViewState(latitude=float(t['lat']), longitude=float(t['lon']), zoom=15)
-
-# --- COLOR LOGIC (THE COMMA ERROR FIX) ---
-# We calculate alphas as strings first to build a clean JS expression
-p_alpha = "180" if show_prime else "0"
-m_alpha = "180" if show_marginal else "0"
-p2_alpha = "0" if only_irrigated else p_alpha
-m_alpha_final = "0" if only_irrigated else m_alpha
-
-# Constructing the JS ternary string without using f-strings inside the logic
+# We build the logic using string results, NOT lists
 fill_color_logic = (
-    "properties.C_ID == 1 ? [34, 197, 94, " + p_alpha + "] : "
-    "properties.C_ID == 2 ? [34, 197, 94, " + p2_alpha + "] : "
-    "properties.C_ID == 3 ? [234, 179, 8, " + m_alpha_final + "] : "
-    "[0, 0, 0, 0]"
+    f"properties.C_ID == 1 ? '{p_color}' : "
+    f"properties.C_ID == 2 ? '{p2_color}' : "
+    f"properties.C_ID == 3 ? '{m_color_final}' : "
+    "'rgba(0,0,0,0)'"
 )
 
-# --- LAYER DEFINITION ---
 layer = pdk.Layer(
     "MVTLayer",
     data="static/tiles/{z}/{x}/{y}.pbf",
-    id="agri-parcel-final-v14",
+    id="final-v15-nuclear",
     pickable=True,
     auto_highlight=True,
-    # External loader fixes the 'Type 4' crash
+    # The external loader is still here to handle the "Type 4" data
     loaders=["https://unpkg.com/@loaders.gl/mvt@3.4.4/dist/mvt-loader.umd.js"],
     binary=False,
     load_options={
@@ -104,6 +73,4 @@ deck = pdk.Deck(
     }
 )
 
-# --- RENDER ---
 st.pydeck_chart(deck)
-st.caption(f"Analyzing {len(df_all):,} agricultural parcels.")
