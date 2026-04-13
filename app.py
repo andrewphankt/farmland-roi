@@ -70,21 +70,25 @@ alpha_js = f"({logic_chain}) ? 100 : 0"
 
     
 layer = pdk.Layer(
-    "MVTLayer",
+    "TileLayer",
     data="https://raw.githubusercontent.com/andrewphankt/farmland-roi/main/static/tiles/{z}/{x}/{y}.pbf",
-    id=layer_id + "_v2", 
+    id="parcel-tile-layer",
+    # This bypasses the broken MVT worker entirely
+    loaders=["https://unpkg.com/@loaders.gl/mvt@3.4.4/dist/mvt-loader.umd.js"],
+    get_tile_data=None, # Let deck.gl handle the fetch
+    
+    # We tell deck.gl how to render each tile manually
+    render_sub_layers=f"""
+        new GeoJsonLayer(props, {{
+            id: props.id + '-geojson',
+            data: props.data,
+            getFillColor: [{r_js}, {g_js}, {b_js}, {alpha_js}],
+            getLineColor: [255, 255, 255, 50],
+            lineWidthMinPixels: 1,
+            pickable: true
+        }})
+    """,
     pickable=True,
-    binary=False, 
-    load_options={
-        "mvt": {
-            "layers": ["all_counties_diamonds"]
-        },
-        
-        "workerUrl": "https://unpkg.com/@deck.gl/layers@8.9.0/dist/mvt-worker.js"
-    },
-    get_fill_color=[255, 0, 0, 150],
-    get_line_color=[255, 255, 255, 30], 
-    line_width_min_pixels=1,
 )
 
 deck = pdk.Deck(
