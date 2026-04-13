@@ -68,18 +68,19 @@ fill_color_logic = (
 
 layer = pdk.Layer(
     "MVTLayer",
-    # The official Streamlit Cloud static file path
-    data="app/static/tiles/{z}/{x}/{y}.pbf", 
-    id="agri-parcel-layer",
+    # 1. The leading slash is CRITICAL to escape Streamlit's iframe
+    data="/app/static/tiles/{z}/{x}/{y}.pbf", 
+    id="agri-parcel-layer-absolute",
+    
+    # 2. MATCH YOUR GITHUB FOLDERS (6 through 14)
+    min_zoom=6,
+    max_zoom=14, 
+    
     pickable=True,
     auto_highlight=True,
     get_fill_color=fill_color_logic,
     get_line_color=[255, 255, 255, 40],
     line_width_min_pixels=0.5,
-    # Adding these stops the map from requesting tiles that don't exist
-    # (Adjust these numbers based on what you actually generated in your tiles folder)
-    min_zoom=10, 
-    max_zoom=15, 
 )
 
 deck = pdk.Deck(
