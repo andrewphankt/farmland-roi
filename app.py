@@ -68,14 +68,10 @@ fill_color_logic = (
 
 layer = pdk.Layer(
     "MVTLayer",
-    # 1. Use the ABSOLUTE URL to bypass the Streamlit ~/+/ iframe proxy
-    data="https://agriparcelindex.streamlit.app/app/static/tiles/{z}/{x}/{y}.pbf", 
-    id="agri-parcel-layer-absolute",
-    
-    # 2. Keep the max_zoom to prevent other 404s
+    data="https://andrewphankt.github.io/farmland-roi/static/tiles/{z}/{x}/{y}.pbf", 
+    id="agri-parcel-layer-pages",
     min_zoom=6,
     max_zoom=14, 
-    
     pickable=True,
     auto_highlight=True,
     get_fill_color=fill_color_logic,
