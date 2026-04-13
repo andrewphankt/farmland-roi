@@ -69,20 +69,24 @@ logic_chain = " || ".join(v_parts) if v_parts else "false"
 alpha_js = f"({logic_chain}) ? 100 : 0"
 
     
+# 1. Simplify the JS strings for the sub-layer
+r_js_clean = "d.properties.C_ID == 1 ? 34 : (d.properties.C_ID == 2 ? 245 : 239)"
+g_js_clean = "d.properties.C_ID == 1 ? 197 : (d.properties.C_ID == 2 ? 158 : 68)"
+b_js_clean = "d.properties.C_ID == 1 ? 94 : (d.properties.C_ID == 2 ? 11 : 68)"
+alpha_js_clean = f"({logic_chain.replace('properties.', 'd.properties.')}) ? 100 : 0"
+
 layer = pdk.Layer(
     "TileLayer",
     data="https://raw.githubusercontent.com/andrewphankt/farmland-roi/main/static/tiles/{z}/{x}/{y}.pbf",
-    id="parcel-tile-layer",
-    # This bypasses the broken MVT worker entirely
+    id="parcel-tile-layer-v3",
     loaders=["https://unpkg.com/@loaders.gl/mvt@3.4.4/dist/mvt-loader.umd.js"],
-    get_tile_data=None, # Let deck.gl handle the fetch
     
-    # We tell deck.gl how to render each tile manually
+    # We use a pure JS function here to avoid the "Expected Comma" error
     render_sub_layers=f"""
         new GeoJsonLayer(props, {{
             id: props.id + '-geojson',
             data: props.data,
-            getFillColor: [{r_js}, {g_js}, {b_js}, {alpha_js}],
+            getFillColor: d => [{r_js_clean}, {g_js_clean}, {b_js_clean}, {alpha_js_clean}],
             getLineColor: [255, 255, 255, 50],
             lineWidthMinPixels: 1,
             pickable: true
