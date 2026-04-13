@@ -69,17 +69,19 @@ alpha_js = f"({logic_chain}) ? 150 : 0"
 
 layer = pdk.Layer(
     "MVTLayer",
-
     data="static/tiles/{z}/{x}/{y}.pbf",
-    id="final_deployment_layer_v1",
+    id="deployment_layer_v_type4_fix",
     pickable=True,
     auto_highlight=True,
-
+    # Force the main thread to handle everything, not the buggy worker
     binary=False, 
     load_options={
         "mvt": {
-            "layers": ["all_counties_diamonds"]
-        }
+            "layers": ["all_counties_diamonds"],
+            "binary": False,  # This kills the Type 3 error
+            "worker": False   # THIS KILLS THE TYPE 4 ERROR
+        },
+        "worker": False # Total worker override
     },
     get_fill_color=f"[{r_js}, {g_js}, {b_js}, {alpha_js}]",
     get_line_color=[255, 255, 255, 30],
