@@ -8,3 +8,12 @@ data/
 __pycache__/
 .venv/
 .DS_Store
+app copy.py
+check_data.py
+cors_server.py
+explore.py
+explore_soil.py
+spatial_join.py
+metadata/
+__pycache__/
+.DS_Store
