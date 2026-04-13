@@ -25,9 +25,8 @@ if "view_state" not in st.session_state:
 layer = pdk.Layer(
     "MVTLayer",
     data="static/tiles/{z}/{x}/{y}.pbf",
-    id="manual-render-layer-v9",
+    id="primitive-layer-v10",
     pickable=True,
-    # This disables the buggy worker
     binary=False,
     load_options={
         "mvt": {
@@ -36,9 +35,9 @@ layer = pdk.Layer(
             "worker": False
         }
     },
-    # We use Hex to avoid the 'comma at character 6' error in JSON lists
-    get_fill_color="#FF0000AA", 
-    get_line_color="#FFFFFF",
+    # Use NO spaces inside these lists to avoid character-count errors
+    get_fill_color=[255,0,0,150], 
+    get_line_color=[255,255,255,100],
     line_width_min_pixels=1,
 )
 
