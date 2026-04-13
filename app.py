@@ -68,11 +68,11 @@ fill_color_logic = (
 
 layer = pdk.Layer(
     "MVTLayer",
-    # 1. The leading slash is CRITICAL to escape Streamlit's iframe
-    data="/app/static/tiles/{z}/{x}/{y}.pbf", 
+    # 1. Use the ABSOLUTE URL to bypass the Streamlit ~/+/ iframe proxy
+    data="https://agriparcelindex.streamlit.app/app/static/tiles/{z}/{x}/{y}.pbf", 
     id="agri-parcel-layer-absolute",
     
-    # 2. MATCH YOUR GITHUB FOLDERS (6 through 14)
+    # 2. Keep the max_zoom to prevent other 404s
     min_zoom=6,
     max_zoom=14, 
     
