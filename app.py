@@ -68,14 +68,18 @@ fill_color_logic = (
 
 layer = pdk.Layer(
     "MVTLayer",
-    # THE MAGIC FIX: Streamlit Cloud static files live at /app/static/
-    data="/app/static/tiles/{z}/{x}/{y}.pbf",
+    # The official Streamlit Cloud static file path
+    data="app/static/tiles/{z}/{x}/{y}.pbf", 
     id="agri-parcel-layer",
     pickable=True,
     auto_highlight=True,
     get_fill_color=fill_color_logic,
     get_line_color=[255, 255, 255, 40],
     line_width_min_pixels=0.5,
+    # Adding these stops the map from requesting tiles that don't exist
+    # (Adjust these numbers based on what you actually generated in your tiles folder)
+    min_zoom=10, 
+    max_zoom=15, 
 )
 
 deck = pdk.Deck(
