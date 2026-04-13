@@ -5,10 +5,10 @@ import pandas as pd
 # Full screen layout
 st.set_page_config(page_title="Farmland ROI Map", layout="wide")
 
-# --- 1. LOAD SEARCH INDEX (Cached for speed) ---
+# --- 1. LOAD SEARCH INDEX ---
+# Caching ensures the 560k row CSV only loads once, keeping the app fast
 @st.cache_data
 def load_index():
-    # Loading your search_index.csv to enable searching by APN
     return pd.read_csv("search_index.csv", dtype={'APN': str})
 
 df_index = load_index()
@@ -20,14 +20,16 @@ with st.sidebar:
     st.subheader("Locate Parcel")
     search_query = st.text_input("Enter APN (e.g., 00101001)")
     
-    # Logic to find coordinates for the search bar
     target_view = None
     if search_query:
+        # Strip whitespace just in case the user pasted it with spaces
+        search_query = search_query.strip()
         match = df_index[df_index['APN'] == search_query]
+        
         if not match.empty:
             target_view = {
-                "lat": match.iloc[0]['lat'],
-                "lon": match.iloc[0]['lon'],
+                "lat": float(match.iloc[0]['lat']),
+                "lon": float(match.iloc[0]['lon']),
                 "zoom": 15
             }
         else:
@@ -40,7 +42,7 @@ with st.sidebar:
     only_irrigated = st.checkbox("Only Irrigated Parcels", value=False)
 
 # --- 3. DYNAMIC MAP LOGIC ---
-# Alpha is locked at 120 for consistent semi-transparency at all zooms
+# Alpha locked at 120 for visibility across all zoom levels
 prime_color = "[34, 139, 34, 120]" if show_prime else "[0, 0, 0, 0]"
 marginal_color = "[255, 80, 80, 120]" if show_marginal else "[0, 0, 0, 0]"
 irrigation_check = "properties.W_Dist == 1" if only_irrigated else "true"
@@ -55,6 +57,7 @@ fill_color_logic = f"""
 if target_view:
     initial_view = pdk.ViewState(latitude=target_view['lat'], longitude=target_view['lon'], zoom=target_view['zoom'])
 else:
+    # Default view over Central Valley
     initial_view = pdk.ViewState(latitude=36.7783, longitude=-119.4179, zoom=8)
 
 layer = pdk.Layer(
@@ -64,9 +67,8 @@ layer = pdk.Layer(
     min_zoom=6,
     max_zoom=14, 
     pickable=True,       
-    # This creates the strong opaque feedback when hovering
     auto_highlight=True, 
-    highlight_color=[255, 255, 255, 150], 
+    highlight_color=[255, 255, 255, 180], # Bold white on hover
     get_fill_color=fill_color_logic,
     get_line_color=[255, 255, 255, 60],
     line_width_min_pixels=0.5,
@@ -91,29 +93,43 @@ with map_col:
 with info_col:
     st.subheader("Parcel Details")
     
+    # If a parcel is selected via click
     if map_event and map_event.selection and map_event.selection.get("objects"):
         selected_data = map_event.selection["objects"].get("agri-parcel-layer", [])
         
         if selected_data:
             props = selected_data[0].get("properties", {})
-            apn = props.get('APN')
+            apn = str(props.get('APN'))
             
-            # Instant visual feedback on click
-            st.success(f"Data Loaded for APN: **{apn}**")
+            st.success(f"Selected APN: **{apn}**")
             
-            # Translate Soil/Water
+            # --- THE GOOGLE MAPS BRIDGE (PRO FIX) ---
+            # Look up the exact coordinate of the clicked parcel from the background CSV
+            match = df_index[df_index['APN'] == apn]
+            
+            if not match.empty:
+                lat = float(match.iloc[0]['lat'])
+                lon = float(match.iloc[0]['lon'])
+                # Official Google Maps Search URL format
+                google_maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+                st.link_button("📍 Open in Google Maps", google_maps_url, use_container_width=True)
+            else:
+                st.warning("Coordinate lookup failed for this APN. Cannot generate Google Maps link.")
+            
+            # --- TRANSLATE DATA ---
             soil_status = "Marginal Soil" if props.get('S_Bin') == 1 else "Prime Farmland"
             water_status = "Irrigated" if props.get('W_Dist') == 1 else "Non-Irrigated"
             
             st.markdown(f"""
+            ### Attributes
             - **County:** {props.get('County')}
             - **Size:** {props.get('Acres')} Acres
-            - **Soil Class:** {soil_status}
+            - **Soil Quality:** {soil_status}
             - **Water Access:** {water_status}
             - **Crop ID:** {props.get('C_ID')}
             """)
             
             st.divider()
-            st.caption("Legal owner and address data requires Assessor's Roll connection.")
+            st.caption("Copy the APN to search county records for legal owner names.")
     else:
-        st.info("Hover over parcels to see them light up. Click a parcel to lock in its data here.")
+        st.info("Click a parcel to unlock the Google Maps link and view attributes.")
