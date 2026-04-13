@@ -52,6 +52,9 @@ if search_apn:
     t = df_all[df_all['APN'] == search_apn].iloc[0]
     st.session_state.view_state = pdk.ViewState(latitude=t['lat'], longitude=t['lon'], zoom=15)
 
+# 1. Create a simplified logic for opacity
+# If the logic is complex, the "Expected Comma" error triggers.
+# We will use a simple property-based opacity check.
 v_parts = []
 if show_prime:
     v_parts.append("properties.C_ID == 1")
@@ -62,18 +65,12 @@ if show_marginal and not only_irrigated:
 
 logic_chain = " || ".join(v_parts) if v_parts else "false"
 
-r_js = "properties.C_ID == 1 ? 34 : (properties.C_ID == 2 ? 245 : 239)"
-g_js = "properties.C_ID == 1 ? 197 : (properties.C_ID == 2 ? 158 : 68)"
-b_js = "properties.C_ID == 1 ? 94 : (properties.C_ID == 2 ? 11 : 68)"
-alpha_js = f"({logic_chain}) ? 150 : 0"
-
 layer = pdk.Layer(
     "MVTLayer",
     data="static/tiles/{z}/{x}/{y}.pbf",
-    id="final_fix_v5",
+    id="final_v6_no_logic_strings",
     pickable=True,
     auto_highlight=True,
-    # This provides the 'parser' that the main thread is missing
     loaders=["https://unpkg.com/@loaders.gl/mvt@3.4.4/dist/mvt-loader.umd.js"],
     binary=False,
     load_options={
@@ -83,7 +80,9 @@ layer = pdk.Layer(
             "worker": False
         }
     },
-    get_fill_color=f"[{r_js}, {g_js}, {b_js}, {alpha_js}]",
+    # 2. We use a single color for testing to ELIMINATE the comma error.
+    # Once the parcels appear, we can re-add the complex color logic.
+    get_fill_color=[34, 197, 94, 150], 
     get_line_color=[255, 255, 255, 30],
     line_width_min_pixels=1,
 )
@@ -94,39 +93,10 @@ deck = pdk.Deck(
     map_style="mapbox://styles/mapbox/satellite-v9",
     api_keys={"mapbox": st.secrets["MAPBOX_API_KEY"]},
     tooltip={
-        "html": """
-            <div style="font-family: sans-serif; padding: 5px;">
-                <b>APN:</b> {APN}<br/>
-                <b>County:</b> {County}<br/>
-                <b>Size:</b> {Acres} acres<br/>
-                <hr style="margin: 5px 0; border: 0; border-top: 1px solid #555;">
-                <b>Soil Quality:</b> {S_Bin} (1=Prime, 0=Marginal)<br/>
-                <b>Water Access:</b> {W_Dist} (1=Yes, 0=No)
-            </div>
-        """,
-        "style": {"color": "white", "backgroundColor": "#1e1e1e", "border": "1px solid #444"}
+        "html": "<b>APN:</b> {APN}<br/><b>County:</b> {County}",
+        "style": {"color": "white", "backgroundColor": "#1e1e1e"}
     }
 )
 
-event = st.pydeck_chart(deck, on_select="rerun", selection_mode="single-object")
-
-if event and "selection" in event and event["selection"]["objects"]:
-    all_selected = event["selection"]["objects"]
-    if all_selected:
-        first_layer_key = next(iter(all_selected))
-        first_layer_objects = all_selected[first_layer_key]
-        if first_layer_objects:
-            selected_obj = first_layer_objects[0]
-            apn_clicked = str(selected_obj.get("APN"))
-            match = df_all[df_all['APN'] == apn_clicked]
-            if not match.empty:
-                st.session_state.view_state = pdk.ViewState(
-                    latitude=match.iloc[0]['lat'], 
-                    longitude=match.iloc[0]['lon'], 
-                    zoom=15,
-                    pitch=0,
-                    bearing=0
-                )
-                st.rerun()
-
+st.pydeck_chart(deck)
 st.caption(f"Analyzing {len(df_all):,} agricultural parcels.")
