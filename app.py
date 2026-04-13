@@ -97,7 +97,7 @@ map_col, info_col = st.columns([3, 1])
 
 with map_col:
     # Requires Streamlit 1.34+. Captures clicks on the map.
-    map_event = st.pydeck_chart(deck, on_select="rerun", selection_mode="single_object")
+    map_event = st.pydeck_chart(deck, on_select="rerun", selection_mode="single-object")
 
 with info_col:
     st.subheader("Parcel Details")
