@@ -68,21 +68,24 @@ if show_marginal and not only_irrigated:
 logic_chain = " || ".join(v_parts) if v_parts else "false"
 alpha_js = f"({logic_chain}) ? 100 : 0"
 
-# Note: Using relative static path for Streamlit native serving
+    
 layer = pdk.Layer(
     "MVTLayer",
     data="https://cdn.jsdelivr.net/gh/andrewphankt/farmland-roi@main/static/tiles/{z}/{x}/{y}.pbf",
     id=layer_id,
     pickable=True,
     auto_highlight=True,
-    min_zoom=6, 
-    max_zoom=14,
-    highlight_color=[255, 255, 255, 80],
+
+    binary=False, 
+    load_options={
+        "mvt": {
+            "worker": False 
+        }
+    },
     get_fill_color=f"[{r_js}, {g_js}, {b_js}, {alpha_js}]",
     get_line_color=[255, 255, 255, 30], 
     line_width_min_pixels=1,
 )
-
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=st.session_state.view_state,
