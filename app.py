@@ -69,11 +69,13 @@ alpha_js = f"({logic_chain}) ? 150 : 0"
 
 layer = pdk.Layer(
     "MVTLayer",
-    data="https://raw.githubusercontent.com/andrewphankt/farmland-roi/main/static/tiles/{z}/{x}/{y}.pbf",
-    id="ag_layer_v_final",
+
+    data="static/tiles/{z}/{x}/{y}.pbf",
+    id="final_deployment_layer_v1",
     pickable=True,
     auto_highlight=True,
-    binary=False,
+
+    binary=False, 
     load_options={
         "mvt": {
             "layers": ["all_counties_diamonds"]
